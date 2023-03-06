@@ -1,4 +1,4 @@
-package com.coldsky.vhr.Pojo;
+package com.coldsky.vhr.entity;
 
 import java.io.Serializable;
 

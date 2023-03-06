@@ -1,4 +1,4 @@
-package com.coldsky.vhr.Pojo;
+package com.coldsky.vhr.entity;
 
 // 角色类
 public class Role {
