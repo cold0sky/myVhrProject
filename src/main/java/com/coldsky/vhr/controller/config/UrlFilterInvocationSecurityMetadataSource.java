@@ -15,6 +15,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Component
+// 登陆权限获取
 public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
     @Autowired
     MenuService menuService;
@@ -24,12 +25,17 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
     public Collection<ConfigAttribute> getAttributes(Object o) throws IllegalArgumentException {
         //获取请求地址
         String requestUrl = ((FilterInvocation) o).getRequestUrl();
+
+        // 如果是登录界面，不进行权限检测
         if ("/login_p".equals(requestUrl)) {
             return null;
         }
+
+        // 从数据库中获取所有页面的权限
         List<Menu> allMenu = menuService.getAllMenu();
+        // 搜索当前请求对应页面的权限
         for (Menu menu : allMenu) {
-            if (antPathMatcher.match(menu.getUrl(), requestUrl)&&menu.getRoles().size()>0) {
+            if (antPathMatcher.match(menu.getUrl(), requestUrl) && menu.getRoles().size() > 0) {
                 List<Role> roles = menu.getRoles();
                 int size = roles.size();
                 String[] values = new String[size];

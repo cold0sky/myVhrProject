@@ -184,7 +184,7 @@ public interface FilterInvocationSecurityMetadataSource extends SecurityMetadata
 ```java
 public class CustomSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
 
-	// 返回本次访问需要的权限，可以有多个权限
+    // 返回本次访问需要的权限，可以有多个权限
     // 没有匹配的url直接返回null,即设置为白名单
     public Collection<ConfigAttribute> getAttributes(Object object) throws IllegalArgumentException {
 
@@ -325,7 +325,7 @@ public class CustomAccessDecisionManager implements AccessDecisionManager {
 
 在以前`xml`的配置中，一般都是自己实现一个`FilterSecurityInterceptor`，然后注入自定义的`SecurityMetadataSource`和`AccessDecisionManager`，就像下面这样：
 
-```
+```xml
 <b:bean id="customFilterSecurityInterceptor" class="com.dexcoder.security.CustomFilterSecurityInterceptor">  
         <b:property name="authenticationManager" ref="customAuthenticationManager" />  
         <b:property name="accessDecisionManager" ref="customAccessDecisionManager" />  
@@ -335,7 +335,7 @@ public class CustomAccessDecisionManager implements AccessDecisionManager {
 
 在`Spring Boot`的`JavaConfig`中并没有这样的实现方式，但是提供了`ObjectPostProcessor`以让用户实现更多想要的高级配置。具体看下面代码，注意`withObjectPostProcessor`部分：
 
-```
+```java
 @Bean
 public AccessDecisionManager accessDecisionManager() {
     return new CustomAccessDecisionManager();
@@ -375,7 +375,7 @@ protected void configure(HttpSecurity http) throws Exception {
 
 当然你需要把`Controller`方法上的注解去掉：
 
-```
+```java
 @RequestMapping(value = "/admin", method = RequestMethod.GET)
 //    @PreAuthorize("hasAnyRole('admin')")
 public String helloAdmin() {
@@ -388,16 +388,6 @@ public String helloUser() {
     return "user";
 }
 ```
-
-#### 测试
-
-因为原来`Controller`中的`helloUser`方法注解上，`hasAnyRole`中有两个值，所在这里在授权的时候也需要授权两个，也就是数据库中admin要多加一条权限记录。
-
-随后访问不同的url，发现跟基本一样，也是在我们预期当中。
-
-#### 最后
-
-到这里一般情况下已经够用了，但是项目中往往会有很多“奇葩”的需求，下一章将讲解如何实现自定义的登录过滤器，实现各种客户端各种方式的登录，如区分手势密码、指纹登录及正常html外的`.json`、`.xml`等方式的访问。
 
 ## 类
 
@@ -419,3 +409,18 @@ Role
 
 ### Controller
 
+UrlFilterInvocationSecurityMetadataSource 
+
+实现FilterInvocationSecurityMetadataSource 接口，用于获取界面的权限信息。
+
+
+
+UrlAccessDecisionManager
+
+实现 AccessDecisionManager 接口，用于自定义的权限决策。
+
+
+
+AuthenticationAccessDeniedHandler
+
+实现 AccessDeniedHandler 接口，用于发送权限错误时显示错误信息

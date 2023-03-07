@@ -10,7 +10,7 @@ import java.util.List;
 
 // 用户实体类
 public class Hr implements UserDetails {
-    private Long id;
+    private int id;
 
     private String name;
 
@@ -36,7 +36,7 @@ public class Hr implements UserDetails {
     public Hr() {
     }
 
-    public Hr(Long id, String name, String phone, String telephone, String address, boolean enabled, String username, String password, String remark, List<Role> roles, String userface) {
+    public Hr(int id, String name, String phone, String telephone, String address, boolean enabled, String username, String password, String remark, List<Role> roles, String userface) {
         this.id = id;
         this.name = name;
         this.phone = phone;
@@ -50,11 +50,11 @@ public class Hr implements UserDetails {
         this.userface = userface;
     }
 
-    public Long getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -160,5 +160,22 @@ public class Hr implements UserDetails {
 
     public void setUserface(String userface) {
         this.userface = userface;
+    }
+
+    @Override
+    public String toString() {
+        return "Hr{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", phone='" + phone + '\'' +
+                ", telephone='" + telephone + '\'' +
+                ", address='" + address + '\'' +
+                ", enabled=" + enabled +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", remark='" + remark + '\'' +
+                ", roles=" + roles +
+                ", userface='" + userface + '\'' +
+                '}';
     }
 }
