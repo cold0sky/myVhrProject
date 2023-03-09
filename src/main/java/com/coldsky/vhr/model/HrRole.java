@@ -1,4 +1,4 @@
-package com.coldsky.vhr.entity;
+package com.coldsky.vhr.model;
 
 // 用户角色类
 public class HrRole {

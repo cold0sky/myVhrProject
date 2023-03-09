@@ -14,7 +14,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 @Component
-public class UrlAccessDecisionManager implements AccessDecisionManager {
+public class CustomUrlDecisionManager implements AccessDecisionManager {
     @Override
     public void decide(Authentication authentication, Object object, Collection<ConfigAttribute> configAttributes) throws AccessDeniedException, InsufficientAuthenticationException {
         // 当前请求需要的权限

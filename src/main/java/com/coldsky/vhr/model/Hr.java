@@ -1,4 +1,4 @@
-package com.coldsky.vhr.entity;
+package com.coldsky.vhr.model;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

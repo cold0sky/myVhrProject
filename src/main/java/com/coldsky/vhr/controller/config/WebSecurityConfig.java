@@ -1,57 +1,107 @@
 package com.coldsky.vhr.controller.config;
 
+import com.coldsky.vhr.model.Hr;
+import com.coldsky.vhr.model.RespBean;
 import com.coldsky.vhr.service.HrService;
-import com.coldsky.vhr.utils.HrUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.*;
 import org.springframework.security.config.annotation.ObjectPostProcessor;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
-import org.springframework.security.web.authentication.AuthenticationFailureHandler;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
-import org.springframework.stereotype.Controller;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
+import org.springframework.security.web.session.ConcurrentSessionFilter;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.io.PrintWriter;
 
-@Controller
+
+@Configuration
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     HrService hrService;
     @Autowired
-    UrlFilterInvocationSecurityMetadataSource urlFilterInvocationSecurityMetadataSource;
+    CustomFilterInvocationSecurityMetadataSource customFilterInvocationSecurityMetadataSource;
     @Autowired
-    UrlAccessDecisionManager urlAccessDecisionManager;
-    @Autowired
-    AuthenticationAccessDeniedHandler authenticationAccessDeniedHandler;
+    CustomUrlDecisionManager customUrlDecisionManager;
 
-
-
-
-    @Override
-    // 使用UserDetailsService去获取用户信息
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(hrService).passwordEncoder(new BCryptPasswordEncoder());
+    @Bean
+    PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
     @Override
-    // 加入白名单
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(hrService);
+    }
+
+    @Override
     public void configure(WebSecurity web) throws Exception {
-        web.ignoring().antMatchers("/index.html", "/static/**");
+        web.ignoring().antMatchers("/css/**", "/js/**", "/index.html", "/img/**", "/fonts/**", "/favicon.ico", "/verifyCode");
+    }
+
+
+    // 对loginFilter做一些功能增强
+    @Bean
+    LoginFilter loginFilter() throws Exception {
+        LoginFilter loginFilter = new LoginFilter();
+        // 登陆成功后的操作
+        loginFilter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+                    response.setContentType("application/json;charset=utf-8");
+                    PrintWriter out = response.getWriter();
+                    Hr hr = (Hr) authentication.getPrincipal();
+                    hr.setPassword(null);
+                    RespBean ok = RespBean.ok("登录成功!", hr);
+                    String s = new ObjectMapper().writeValueAsString(ok);
+                    out.write(s);
+                    out.flush();
+                    out.close();
+                }
+        );
+        // 登陆失败后的操作
+        loginFilter.setAuthenticationFailureHandler((request, response, exception) -> {
+                    response.setContentType("application/json;charset=utf-8");
+                    PrintWriter out = response.getWriter();
+                    RespBean respBean = RespBean.error(exception.getMessage());
+                    if (exception instanceof LockedException) {
+                        respBean.setMsg("账户被锁定，请联系管理员!");
+                    } else if (exception instanceof CredentialsExpiredException) {
+                        respBean.setMsg("密码过期，请联系管理员!");
+                    } else if (exception instanceof AccountExpiredException) {
+                        respBean.setMsg("账户过期，请联系管理员!");
+                    } else if (exception instanceof DisabledException) {
+                        respBean.setMsg("账户被禁用，请联系管理员!");
+                    } else if (exception instanceof BadCredentialsException) {
+                        respBean.setMsg("用户名或者密码输入错误，请重新输入!");
+                    }
+                    out.write(new ObjectMapper().writeValueAsString(respBean));
+                    out.flush();
+                    out.close();
+                }
+        );
+        // 设置authenticationManager
+        loginFilter.setAuthenticationManager(authenticationManagerBean());
+        loginFilter.setFilterProcessesUrl("/doLogin");
+
+        // 设置Sessions最大数量为1
+        ConcurrentSessionControlAuthenticationStrategy sessionStrategy = new ConcurrentSessionControlAuthenticationStrategy(sessionRegistry());
+        sessionStrategy.setMaximumSessions(1);
+        loginFilter.setSessionAuthenticationStrategy(sessionStrategy);
+        return loginFilter;
+    }
+
+    @Bean
+    SessionRegistryImpl sessionRegistry() {
+        return new SessionRegistryImpl();
     }
 
     @Override
@@ -59,46 +109,48 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .withObjectPostProcessor(new ObjectPostProcessor<FilterSecurityInterceptor>() {
                     @Override
-                    // 设置自定义的权限资源获取与权限验证
-                    public <O extends FilterSecurityInterceptor> O postProcess(O o) {
-                        o.setSecurityMetadataSource(urlFilterInvocationSecurityMetadataSource);
-                        o.setAccessDecisionManager(urlAccessDecisionManager);
-                        return o;
-                    }
-                }).and().formLogin().loginPage("/login_p").loginProcessingUrl("/login")
-                .usernameParameter("username").passwordParameter("password").permitAll()
-                .failureHandler(new AuthenticationFailureHandler() {
-                    @Override
-                    public void onAuthenticationFailure(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, AuthenticationException e) throws IOException, ServletException {
-                        httpServletResponse.setContentType("application/json;charset=utf-8");
-                        PrintWriter out = httpServletResponse.getWriter();
-                        StringBuffer sb = new StringBuffer();
-                        sb.append("{\"status\":\"error\",\"msg\":\"");
-                        if (e instanceof UsernameNotFoundException || e instanceof BadCredentialsException) {
-                            sb.append("用户名或密码输入错误，登录失败!");
-                        } else if (e instanceof DisabledException) {
-                            sb.append("账户被禁用，登录失败，请联系管理员!");
-                        } else {
-                            sb.append("登录失败!");
-                        }
-                        sb.append("\"}");
-                        out.write(sb.toString());
-                        out.flush();
-                        out.close();
+                    public <O extends FilterSecurityInterceptor> O postProcess(O object) {
+                        object.setAccessDecisionManager(customUrlDecisionManager);
+                        object.setSecurityMetadataSource(customFilterInvocationSecurityMetadataSource);
+                        return object;
                     }
                 })
-                .successHandler(new AuthenticationSuccessHandler() {
-                    @Override
-                    public void onAuthenticationSuccess(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication) throws IOException, ServletException {
-                        httpServletResponse.setContentType("application/json;charset=utf-8");
-                        PrintWriter out = httpServletResponse.getWriter();
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        String s = "{\"status\":\"success\",\"msg\":" + objectMapper.writeValueAsString(HrUtils.getCurrentHr()) + "}";
-                        out.write(s);
-                        out.flush();
-                        out.close();
-                    }
-                }).and().logout().permitAll().and().csrf().disable().exceptionHandling().
-                accessDeniedHandler(authenticationAccessDeniedHandler);
+                .and()
+                .logout()
+                .logoutSuccessHandler((req, resp, authentication) -> {
+                            resp.setContentType("application/json;charset=utf-8");
+                            PrintWriter out = resp.getWriter();
+                            out.write(new ObjectMapper().writeValueAsString(RespBean.ok("注销成功!")));
+                            out.flush();
+                            out.close();
+                        }
+                )
+                .permitAll()
+                .and()
+                .csrf().disable().exceptionHandling()
+                //没有认证时，在这里处理结果，不要重定向
+                .authenticationEntryPoint((req, resp, authException) -> {
+                            resp.setContentType("application/json;charset=utf-8");
+                            resp.setStatus(401);
+                            PrintWriter out = resp.getWriter();
+                            RespBean respBean = RespBean.error("访问失败!");
+                            if (authException instanceof InsufficientAuthenticationException) {
+                                respBean.setMsg("请求失败，请联系管理员!");
+                            }
+                            out.write(new ObjectMapper().writeValueAsString(respBean));
+                            out.flush();
+                            out.close();
+                        }
+                );
+        http.addFilterAt(new ConcurrentSessionFilter(sessionRegistry(), event -> {
+            HttpServletResponse resp = event.getResponse();
+            resp.setContentType("application/json;charset=utf-8");
+            resp.setStatus(401);
+            PrintWriter out = resp.getWriter();
+            out.write(new ObjectMapper().writeValueAsString(RespBean.error("您已在另一台设备登录，本次登录已下线!")));
+            out.flush();
+            out.close();
+        }), ConcurrentSessionFilter.class);
+        http.addFilterAt(loginFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 }

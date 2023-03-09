@@ -1,7 +1,7 @@
 package com.coldsky.vhr.mapper;
 
-import com.coldsky.vhr.entity.Hr;
-import com.coldsky.vhr.entity.Role;
+import com.coldsky.vhr.model.Hr;
+import com.coldsky.vhr.model.Role;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

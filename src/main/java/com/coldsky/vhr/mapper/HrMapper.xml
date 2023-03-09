@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
 <mapper namespace="com.coldsky.vhr.mapper.HrMapper">
-    <resultMap id="BaseResultMap" type="com.coldsky.vhr.entity.Hr">
+    <resultMap id="BaseResultMap" type="com.coldsky.vhr.model.Hr">
         <id column="id" property="id" jdbcType="INTEGER"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
         <result column="phone" property="phone" jdbcType="CHAR"/>
@@ -13,8 +13,8 @@
         <result column="userface" property="userface" jdbcType="VARCHAR"/>
         <result column="remark" property="remark" jdbcType="VARCHAR"/>
     </resultMap>
-    <resultMap id="HrWithRoles" type="com.coldsky.vhr.entity.Hr" extends="BaseResultMap">
-        <collection property="roles" ofType="com.coldsky.vhr.entity.Role">
+    <resultMap id="HrWithRoles" type="com.coldsky.vhr.model.Hr" extends="BaseResultMap">
+        <collection property="roles" ofType="com.coldsky.vhr.model.Role">
             <id column="rid" property="id"/>
             <result column="rname" property="name"/>
             <result column="rnameZh" property="nameZh"/>
@@ -35,7 +35,7 @@
         </if>
         order by hr.id
     </select>
-    <select id="getHrRolesById" resultType="com.coldsky.vhr.entity.Role">
+    <select id="getHrRolesById" resultType="com.coldsky.vhr.model.Role">
         select r.* from role r,hr_role hrr where hrr.`rid`=r.`id` and hrr.`hrid`=#{id}
     </select>
     <select id="loadUserByUsername" resultMap="BaseResultMap">
@@ -51,7 +51,7 @@
         delete from hr
         where id = #{id,jdbcType=INTEGER}
     </delete>
-    <insert id="insert" parameterType="com.coldsky.vhr.entity.Hr">
+    <insert id="insert" parameterType="com.coldsky.vhr.model.Hr">
         insert into hr (id, name, phone,
                         telephone, address, enabled,
                         username, password, userface,
@@ -61,7 +61,7 @@
                 #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{userface,jdbcType=VARCHAR},
                 #{remark,jdbcType=VARCHAR})
     </insert>
-    <insert id="insertSelective" parameterType="com.coldsky.vhr.entity.Hr">
+    <insert id="insertSelective" parameterType="com.coldsky.vhr.model.Hr">
         insert into hr
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="id != null">
@@ -128,7 +128,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelective" parameterType="com.coldsky.vhr.entity.Hr">
+    <update id="updateByPrimaryKeySelective" parameterType="com.coldsky.vhr.model.Hr">
         update hr
         <set>
             <if test="name != null">
@@ -167,7 +167,7 @@
     <update id="updatePasswd">
         update hr set password = #{encodePass} where id=#{hrid};
     </update>
-    <update id="updateByPrimaryKey" parameterType="com.coldsky.vhr.entity.Hr">
+    <update id="updateByPrimaryKey" parameterType="com.coldsky.vhr.model.Hr">
         update hr
         set name = #{name,jdbcType=VARCHAR},
             phone = #{phone,jdbcType=CHAR},

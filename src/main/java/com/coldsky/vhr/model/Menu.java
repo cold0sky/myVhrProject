@@ -1,4 +1,4 @@
-package com.coldsky.vhr.entity;
+package com.coldsky.vhr.model;
 
 import java.io.Serializable;
 import java.util.List;

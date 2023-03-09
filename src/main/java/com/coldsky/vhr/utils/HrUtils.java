@@ -1,6 +1,6 @@
 package com.coldsky.vhr.utils;
 
-import com.coldsky.vhr.entity.Hr;
+import com.coldsky.vhr.model.Hr;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 

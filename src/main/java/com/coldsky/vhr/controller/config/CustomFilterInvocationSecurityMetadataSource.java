@@ -1,7 +1,7 @@
 package com.coldsky.vhr.controller.config;
 
-import com.coldsky.vhr.entity.Menu;
-import com.coldsky.vhr.entity.Role;
+import com.coldsky.vhr.model.Menu;
+import com.coldsky.vhr.model.Role;
 import com.coldsky.vhr.service.MenuService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.ConfigAttribute;
@@ -16,7 +16,7 @@ import java.util.List;
 
 @Component
 // 登陆权限获取
-public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
+public class CustomFilterInvocationSecurityMetadataSource implements FilterInvocationSecurityMetadataSource {
     @Autowired
     MenuService menuService;
     AntPathMatcher antPathMatcher = new AntPathMatcher();
@@ -32,7 +32,7 @@ public class UrlFilterInvocationSecurityMetadataSource implements FilterInvocati
         }
 
         // 从数据库中获取所有页面的权限
-        List<Menu> allMenu = menuService.getAllMenu();
+        List<Menu> allMenu = menuService.getAllMenusWithRole();
         // 搜索当前请求对应页面的权限
         for (Menu menu : allMenu) {
             if (antPathMatcher.match(menu.getUrl(), requestUrl) && menu.getRoles().size() > 0) {
