@@ -1,5 +1,7 @@
 package com.coldsky.vhr.model;
 
+import com.coldsky.vhr.model.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -7,10 +9,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
-// 用户实体类
 public class Hr implements UserDetails {
-    private int id;
+    private Integer id;
 
     private String name;
 
@@ -20,41 +22,43 @@ public class Hr implements UserDetails {
 
     private String address;
 
-    private boolean enabled;
+    private Boolean enabled;
 
     private String username;
 
     private String password;
 
-    private String remark;
-
-    private List<Role> roles;
-
     private String userface;
 
+    private String remark;
+    private List<Role> roles;
 
-    public Hr() {
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Hr hr = (Hr) o;
+        return Objects.equals(username, hr.username);
     }
 
-    public Hr(int id, String name, String phone, String telephone, String address, boolean enabled, String username, String password, String remark, List<Role> roles, String userface) {
-        this.id = id;
-        this.name = name;
-        this.phone = phone;
-        this.telephone = telephone;
-        this.address = address;
-        this.enabled = enabled;
-        this.username = username;
-        this.password = password;
-        this.remark = remark;
+    @Override
+    public int hashCode() {
+        return Objects.hash(username);
+    }
+
+    public List<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(List<Role> roles) {
         this.roles = roles;
-        this.userface = userface;
     }
 
-    public int getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(int id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
@@ -63,7 +67,7 @@ public class Hr implements UserDetails {
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name = name == null ? null : name.trim();
     }
 
     public String getPhone() {
@@ -71,7 +75,7 @@ public class Hr implements UserDetails {
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        this.phone = phone == null ? null : phone.trim();
     }
 
     public String getTelephone() {
@@ -79,7 +83,7 @@ public class Hr implements UserDetails {
     }
 
     public void setTelephone(String telephone) {
-        this.telephone = telephone;
+        this.telephone = telephone == null ? null : telephone.trim();
     }
 
     public String getAddress() {
@@ -87,14 +91,10 @@ public class Hr implements UserDetails {
     }
 
     public void setAddress(String address) {
-        this.address = address;
+        this.address = address == null ? null : address.trim();
     }
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
+    public void setEnabled(Boolean enabled) {
         this.enabled = enabled;
     }
 
@@ -117,13 +117,19 @@ public class Hr implements UserDetails {
         return true;
     }
 
+    @Override
+    public boolean isEnabled() {
+        return enabled;
+    }
+
     public void setUsername(String username) {
-        this.username = username;
+        this.username = username == null ? null : username.trim();
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        List<GrantedAuthority> authorities = new ArrayList<>();
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>(roles.size());
         for (Role role : roles) {
             authorities.add(new SimpleGrantedAuthority(role.getName()));
         }
@@ -135,23 +141,7 @@ public class Hr implements UserDetails {
     }
 
     public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public List<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<Role> roles) {
-        this.roles = roles;
+        this.password = password == null ? null : password.trim();
     }
 
     public String getUserface() {
@@ -159,23 +149,14 @@ public class Hr implements UserDetails {
     }
 
     public void setUserface(String userface) {
-        this.userface = userface;
+        this.userface = userface == null ? null : userface.trim();
     }
 
-    @Override
-    public String toString() {
-        return "Hr{" +
-                "id=" + id +
-                ", name='" + name + '\'' +
-                ", phone='" + phone + '\'' +
-                ", telephone='" + telephone + '\'' +
-                ", address='" + address + '\'' +
-                ", enabled=" + enabled +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", remark='" + remark + '\'' +
-                ", roles=" + roles +
-                ", userface='" + userface + '\'' +
-                '}';
+    public String getRemark() {
+        return remark;
+    }
+
+    public void setRemark(String remark) {
+        this.remark = remark == null ? null : remark.trim();
     }
 }

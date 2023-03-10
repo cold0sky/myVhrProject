@@ -10,6 +10,8 @@ import javax.servlet.http.HttpSession;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 
+
+// 控制二维码显示
 @RestController
 public class LoginController {
 
