@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.access.intercept.FilterSecurityInterceptor;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.session.ConcurrentSessionControlAuthenticationStrategy;
@@ -33,6 +34,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     CustomFilterInvocationSecurityMetadataSource customFilterInvocationSecurityMetadataSource;
     @Autowired
     CustomUrlDecisionManager customUrlDecisionManager;
+
+    @Autowired
+    AuthenticationAccessDeniedHandler authenticationAccessDeniedHandler;
 
     @Bean
     PasswordEncoder passwordEncoder() {
@@ -141,7 +145,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                             out.flush();
                             out.close();
                         }
-                );
+                ).accessDeniedHandler(authenticationAccessDeniedHandler);
         http.addFilterAt(new ConcurrentSessionFilter(sessionRegistry(), event -> {
             HttpServletResponse resp = event.getResponse();
             resp.setContentType("application/json;charset=utf-8");

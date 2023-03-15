@@ -26,11 +26,6 @@ public class CustomFilterInvocationSecurityMetadataSource implements FilterInvoc
         //获取请求地址
         String requestUrl = ((FilterInvocation) o).getRequestUrl();
 
-        // 如果是登录界面，不进行权限检测
-        if ("/login_p".equals(requestUrl)) {
-            return null;
-        }
-
         // 从数据库中获取所有页面的权限
         List<Menu> allMenu = menuService.getAllMenusWithRole();
         // 搜索当前请求对应页面的权限
